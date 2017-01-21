@@ -1,0 +1,3 @@
+#About the course
+*Nice to get to know R and Git better. Below is the link to my course diary*
+[My course diary](https://jonharju.github.io/IODS-project/)

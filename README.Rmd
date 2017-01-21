@@ -1,4 +1,4 @@
 #About the course
-*This course seems really interesting and fun. In this chapter we learned the basics of Git and R. Below is the link to my course diary*
+*This course seems really interesting and fun. In this course we will learn the basics of Git and R. Below is the link to my course diary*
 
 [My course diary](https://jonharju.github.io/IODS-project/)

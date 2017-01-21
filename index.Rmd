@@ -1,6 +1,6 @@
 ---
 title: "IODS course project"
-author: "Jonas Harjunp‰‰"
+author: "Jonas Harjunp√§√§"
 output:
   html_document:
     theme: cosmo

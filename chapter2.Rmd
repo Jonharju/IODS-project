@@ -1,32 +1,31 @@
-# Regression and model validation
+# Chapter 2 - Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+*This week I've learned to wrangle a dataset and analyze it. I've also learned more about how to use R-markdown, especially how to fit code chunks in it.*
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using 
-
+## Structure and dimensions of the data
 
 ```{r}
 learning2014 <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/learning2014.txt",sep=",", header=TRUE)
 dim(learning2014)
 ```
 
-*Here we see the dimension and summary of the data. We can see from the dimensions here that data consists of 166 obervations(rows) and 7 variables(columns).* 
+Here we see the dimension and summary of the data. We can see from the dimensions here that data consists of 166 obervations(rows) and 7 variables(columns). 
 
 ```{r}
 str(learning2014)
 ```
 
-*In the structure we can see the names for those variables, their type and some samples of them. The names of the variables refer to the age of the participants, their gender, their attitudes towards statistics, their exam points and approaches to studying using deep-, strategy- and surface learning.*
+In the structure we can see the names for those variables, their type and some samples of them. The names of the variables refer to the age of the participants, their gender, their attitudes towards statistics, their exam points and approaches to studying using deep-, strategy- and surface learning.
+
+## Overview and summary of the data and variables
 
 ```{r}
 summary(learning2014)
 ```
 
-*From the summary we can gain some more insight on the data, like that the amount of female participants was almost double compared to male or that the age of the participants was between 17 and 55.*
+From the summary we can gain some more insight on the data, like that the amount of female participants was almost double compared to male or that the age of the participants was between 17 and 55.
 
-```{r}
+```{r warning=FALSE}
 library(GGally)
 library(ggplot2)
 
@@ -34,19 +33,41 @@ p <- ggpairs(learning2014, mapping = aes(col = gender, alpha = 0.3), lower = lis
 p
 ```
 
-*From the graphical overview we can see more about factors like correlation. We can clearly see a strong positive correlation between attitude and points, meanwhile points and age seem to have a negative correlation.*
+From the graphical overview we can see more about factors like correlation. We can clearly see a strong positive correlation between attitude and points, meanwhile points and age seem to have a negative correlation.
+
+## Creating a regression model
+
+For the regression model I have chosen attitude, deep and surf as explanatory variables on the target variable points.
 
 ```{r}
 model <- lm(points ~ attitude + deep + surf, data = learning2014)
 summary(model)
 ```
 
+We can see from here that the model explains 20% of the variance. We can also see that attitude is the only significant with it's p-value being close to 0, while the other too are > 0.05. It is also the only positively correlated of the three explanatory variables. Lets refit the model with only attitude.
+
 ```{r}
 model1 <- lm(points ~ attitude, data = learning2014)
 summary(model1)
 ```
 
+Now the model only contains the relevant variables. From this we can interpret that an increase of 1 in attitude leads to a 3.5 increase in points. The intercept lies at 11.6 points, which means that an person with 0 attitude woulde get 11.6 points. The standard error for attitude is 0.56, the t value is 6.214 and p value is 4.12*10^9, so almost 0.
+
+Multiple r squared describes how well the model explains the target variable. In this case its 19% and based on that we can say that it clearly affects the amount of points, but it is clearly not the only factor contributing to success.
+
+## Diagnostic plots
+
 ```{r}
 par(mfrow = c(2,2))
 plot(model1, which = c(1,2,5))
 ```
+
+In linear model, there is an assumption that the relationship between the two variables. Then are also the assumptions about noise or errors in the observations, which is described as an random variable e. We assume that the errors are not correlated, do not have constant variance and are normally distributed.
+
+Residuals vs. fitted can be used to determine if the errors have constant variance. There seems to be no pattern in the scatter plot, it seems there would be no problems with the models assumptions.
+
+Normal QQ can be used to determine the normality of the errors. From the QQ-plot we can see that most of the findings fit the normality assumption, except for the ends. Therefore we cannot say it is completly impactless, but quite still quite a reasonable assumption.
+
+Residuals vs. leverage can be used to determine the impact of a single observation on the model. Some observations are away from cluster, but the leverage of these observations quite low, so no single observation seem to have a big effect on the model.
+
+Based on these plots, we can assume that the assumptions are valid and therefore the test is also valid.

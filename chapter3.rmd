@@ -1,0 +1,111 @@
+#Chapter 3 - Logistic regression
+
+*This week I've learned about logistic regression and cross-tabulation. This week I have wrangled and analyzed a set about middleschool students alcohol usage*
+
+## About the data
+
+```{r}
+alc <- read.table("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/alc.txt",sep=",", header=TRUE)
+colnames(alc)
+library(ggplot2)
+```
+
+The data consists of 382 oservations of 35 attributes from secondary school students from both a math and portugese class. The variables are attributes about the student, i.e. like their age, size of family and their grades. Some adjustments have been made, as in alcuse to describe the average of workday and weekend alcohol consumption and also highuse, which is true if alcuse is greater than 2. The variables not used for joining the two data have been combined by averaging.
+
+## My four variables
+Four variables which I think will have will have an effect or are effected by are sex, studytime, famrel and failures.
+Hypothesis:
+
+* Studytime - I have a hunch that people who study much are not hard at using alcohol
+
+* Famrel - I believe that bad family relations lead to higher use of alcohol than good ones
+
+* Absences - I think that absences might be correlated to higher use of alcohol
+
+* Failures - I think that there is a link between failures and high use of alcohol
+
+## Exploration of the variables
+
+```{r}
+summary(alc$studytime)
+study1 <- ggplot(alc, aes(x = high_use, y = studytime, col = high_use))
+study1 + geom_boxplot() + ggtitle("Studytime by high use of alcohol")
+```
+
+We can see that the the plot with high use locates most of its values under the mean and the median, while the one with low places higher than them. This would seem to indicate that the hypothesis would be right.
+
+```{r}
+summary(alc$famrel)
+famrel1 <- ggplot(alc, aes(x = famrel, col = high_use))
+famrel1 + geom_bar() + ggtitle("Family relations by high use of alcohol")
+```
+
+As we can see low use is more common with high family relations. The median and mean is around 4 and most of the low users are there or above, while high usage is relatively more common under that. This seems to support my hypothesis.
+
+```{r}
+summary(alc$absences)
+absences1 <- ggplot(alc, aes(x = high_use, y = absences, col = high_use))
+absences1 + geom_boxplot() + ggtitle("Absences by high use of alcohol")
+```
+
+As we can see from the boxplots, the average of absences is higher among high use than with low use. The difference is not huge and the greatest amount of absences from a single point is on low use, but the low use is clearly closer 0 than high use. This would mean that my hypothesis seems correct.
+
+```{r}
+summary(alc$failures)
+failures1 <- ggplot(alc, aes(x = failures, col = high_use))
+failures1 + geom_bar() + ggtitle("Failures by high use of alcohol")
+```
+
+Based on the bars we can see that the proportion of failures greater than 0 are about the same, no matter if the use is high or not. In 0 the amount on low use is greater, which would mean that a larger proportion of high use i greater than 0. That would seem to support our hypothesis.
+
+## Logistic regression model
+Lets fit a regression model with high_use as target and the four chosen variables as predictors.
+```{r}
+m1 <- glm(high_use ~ studytime + famrel + absences + failures, data = alc, family = "binomial")
+summary(m1)
+```
+
+From the summary we can see that all of the varibales are significant with at least 1% level signifigance. The p-values of failures and family relations are a little under 5%, while studytime and absences are close 0. From estimate we can see that high use is negatively correlated to studytime and famrel, and positively correlated to absences and failures.
+
+```{r, message=FALSE}
+library(dplyr)
+odds_r <- coef(m1) %>% exp
+conf_int <- confint(m1) %>% exp
+cbind(odds_r, conf_int)
+```
+None of the confidenceintervalls seem to contain 1 in them, which is good because it would suggest that they are not related to high use. The odds for for studytime and famrel are less than 1, which would suggest negative correlation with high use. Failures is greater than 1 while absences is quite close to 1, which would imply a positive correlation for them both.
+
+## Predicting with the model
+
+```{r}
+probabilities <- predict(m1, type = "response")
+alc <- alc %>%
+  mutate(probability = probabilities) %>%
+  mutate(prediction = probability > 0.5)
+table(high_use = alc$high_use, prediction =  alc$prediction)
+```
+
+Here we can see the amount of predictions which matched and which were false findings.
+
+```{r}
+g <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))
+g + geom_point(position = "jitter")
+```
+
+Here is a graphical interpretation of it.
+
+```{r}
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins
+```
+
+Here is the table with procentage and sums.
+
+```{r}
+loss_funct <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+loss_funct(class = alc$high_use, prob = alc$probability)
+```
+
+The prediction error is 0.28, which means that the accuracy is almost 72%. Since guessing is 50%, the model is way more accurate.

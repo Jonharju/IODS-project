@@ -109,3 +109,23 @@ loss_funct(class = alc$high_use, prob = alc$probability)
 ```
 
 The prediction error is 0.28, which means that the accuracy is almost 72%. Since guessing is 50%, the model is way more accurate.
+
+## 10-fold cross-validation
+Let's do 10-fold cross-validation on my model
+```{r}
+library(boot)
+cv <- alc %>%
+  cv.glm(cost = loss_funct, glmfit = m1, K = 10)
+cv$delta[1]
+```
+
+This is a bit higher than the model introduced in Datacamp. Let's try another model by changing the order and adding sex as an explanatory variable.
+
+```{r}
+m <- glm(high_use ~ failures+absences+famrel+sex+studytime, data = alc, family = "binomial")
+summary(m)
+cv <- alc %>%
+  cv.glm(cost = loss_funct, glmfit = m, K = 10)
+cv$delta[1]
+```
+ As we can this models error is close to 0.25, which is a bit better than 0.26 in Datacamp.

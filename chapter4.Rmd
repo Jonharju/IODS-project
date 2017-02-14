@@ -5,14 +5,14 @@
 
 This week we have as data housing values in suburbs of Boston. Let's have a look.
 
-```{r}
+```{r,message=FALSE}
 library(MASS)
 data("Boston")
 dim(Boston)
 str(Boston)
 ```
 
-The data has 506 observations of 14 variables. These variables describe per capita crime rate by town, average number of rooms per dwelling and pupil-teacher ratio by town. The chas variable is 1 a boolean variable, where the value is 1 if tract bounds the Charles river and 0 otherwise)
+The data has 506 observations of 14 variables. These variables describe per capita crime rate by town, average number of rooms per dwelling and pupil-teacher ratio by town. The chas variable is a boolean variable, where the value is 1 if tract bounds the Charles river and 0 otherwise.
 
 ##Overview of data and summaries of variables
 

@@ -1,0 +1,121 @@
+#Chapter 4 - Clustering and classification
+*This week I have been learning about clustering and classification.*
+
+## The data
+
+This week we have as data housing values in suburbs of Boston. Let's have a look.
+
+```{r}
+library(MASS)
+data("Boston")
+dim(Boston)
+str(Boston)
+```
+
+The data has 506 observations of 14 variables. These variables describe per capita crime rate by town, average number of rooms per dwelling and pupil-teacher ratio by town. The chas variable is 1 a boolean variable, where the value is 1 if tract bounds the Charles river and 0 otherwise)
+
+##Overview of data and summaries of variables
+
+```{r, warning=FALSE,message=FALSE}
+library(corrplot)
+library(tidyverse)
+summary(Boston)
+```
+
+Some of data have some interesting qualities, as in the difference between crimes 3rd quantile and max being really huge or differences in minimum and first quantile of amount of black people.
+
+```{r, warning=FALSE,message=FALSE}
+cor_matrix<-cor(Boston) %>% round(digits=2)
+corrplot(cor_matrix, method="circle", type = "upper",cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+```
+
+From the correlation matrix we can see that rad and tax seem to be postively correlate, while dis seems to negatively corelated with age, nox and indus.
+
+##Standardizing the dataset
+
+```{r}
+boston_scaled <- scale(Boston)
+summary(boston_scaled)
+boston_scaled <- as.data.frame(boston_scaled)
+```
+
+Now the data is scaled the mean of the sets are 0 and quantiles and extremes revolve around that. This doesn't change the proportions of data, it just makes it easier to see. As we now can see the crim max is multiple times greater than the min or the min blacks is way smalleer than the max. 
+
+```{r}
+scaled_crim <- boston_scaled$crim
+bins <- quantile(scaled_crim)
+crime <- cut(scaled_crim, breaks = bins, include.lowest = TRUE, labels = c("low", "med_low", "med_high", "high"))
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+
+n <- nrow(boston_scaled)
+
+ind <- sample(n,  size = n * 0.8)
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+correct_classes <- test$crime
+test <- dplyr::select(test, -crime)
+```
+
+Here I created a categorical variable ‘crime’ about the scaled crime rate. The variable has 4 levels: low, medlow, medhigh and high. This replaced the old crime variable.
+
+I also divided the scaled dataset to train and test sets, with 80:20 proportion.
+
+## Linear discriminant analysis
+
+Let's fit a linear discriminant analysis on the train set, using the crime rate as the target variable and the other variables as predictors.
+
+```{r,warning=FALSE,message=FALSE}
+lda.fit <- lda(crime ~., data = train)
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+classes <- as.numeric(train$crime)
+plot(lda.fit, dimen = 2, col = classes, och = classes)
+lda.arrows(lda.fit, myscale = 1)
+```
+
+## Predicting the classes with the LDA model
+
+```{r}
+lda.pred <- predict(lda.fit, newdata = test)
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+The model predicts quite well, since the most of the values are on the diagonal. Some misses lie on low ones which are predicted as medlow and medlow and -high which are predicted the opposite way.
+
+## Distances between observations and clustering
+
+Let's reload the Boston dataset and scale it again. Then we calculate the distances between the observations using Euclidean distance measure and use the K-means clustering method with 5 clusters.
+
+```{r}
+data("Boston")
+Boston2 <- scale(Boston)
+Boston2 <- as.data.frame(Boston2)
+dist_eu <- dist(Boston2)
+km <- kmeans(dist_eu, centers = 5)
+pairs(Boston2, col = km$cluster, lower.panel = NULL)
+```
+
+Let's determine the optimal number of clusters using the within cluster sum of squares (WCSS).
+
+```{r}
+set.seed(123)
+k_max <- 10
+twcss <- sapply(1:k_max, function(k){kmeans(dist_eu, k)$tot.withinss})
+plot(1:k_max, twcss, type = 'b')
+```
+
+The optimal number of clusters is where the largest drop in the WCSS, which seems to be 2.Let's draw the plot again using 2 as the number of clusters.
+
+```{r}
+km <- kmeans(dist_eu, centers = 2)
+pairs(Boston2, col = km$cluster, lower.panel = NULL)
+```
+
+Some variables seem to be more relevant for clustering than others. For example points with low tax and rad values belong to the red cluster, while points with high values belong to the black cluster. On the other hand some variables as chas are not clearly divided. This means that chas is not relevant for clustering.

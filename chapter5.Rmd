@@ -1,0 +1,55 @@
+#Chapter 5 - Dimensionality reduction
+*This week I have been learning about the reduction of dimensionality.*
+
+## The data
+
+This week we have as dataset the Human Development Index, an alternative to GNP to compare countries by human capabilities . Let's have a look.
+
+```{r,message=FALSE}
+setwd("C:/Users/Jonas/Documents/GitHub/IODS-project/data/")
+human <- read.table("human.csv", sep = ",", header = TRUE)
+str(human)
+dim(human)
+```
+
+The subset from the original data which I have created consists of 8 variables and 155 observations. Variables modified from original dataset are Country, High_edu_f_m, F_m_working and GNI. The variables describe Gross National Income per capita, birth rate, life expectancy at birth and expected years of education to name a few.
+
+```{r,message=FALSE}
+summary(human)
+```
+
+
+```{r,message=FALSE}
+library(GGally); library(dplyr); library(corrplot)
+ggpairs(human)
+```
+
+Clearly the greatest correlation seems to between maternal deaths and life expectancies, followed by maternal deaths and educational expectations. Also young births seems also to be correlated to life and educational expectations. All of these are negatively correlated.
+Interestingly the most positively correlated seem to be educational expectations and life expectations and maternal deaths and young births.
+
+##PCA
+
+Let's perform Principal Component Analysis(PCA) on the unscaled data.
+
+```{r,message=FALSE}
+pca_human <- prcomp(human)
+pca_human
+summary(pca_human)
+biplot(pca_human, choices = 1:2, cex = c(0.8, 1), col= c("grey40", "deeppink2"))
+```
+
+Since the variables are not scaled, they don't have the same influence on others. Let's standardized the variables and look again.
+
+```{r,message=FALSE}
+human.std <- scale(human)
+pca_human2 <- prcomp(human.std)
+pca_human2
+summary(pca_human2)
+biplot(pca_human2, choices= 1:2, cex = c(0.8, 1), col= c("grey40", "deeppink2"))
+```
+
+This looks quite different compared to the previous one. Because PCA assumes that larger variance equals to greater importance, the values with the largest values get too much weight, like maternal deaths in my case.
+
+The two components explain together around 64% of the variance in dataset. There seems to a negative correlation between maternal deaths and young births, as earlier suspected. There also seems to be a postive correlation between educational expecatations and the ratio of second level education. Not surprising at all. There also seems to be a correlation between GNI and life expectancy, which also seems logical. There would also seem to be some indication on that there is a  correlation between ratio of women to men working and women present in parliament, but it is not as clear as the previous.
+
+

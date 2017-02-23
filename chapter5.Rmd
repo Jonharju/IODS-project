@@ -3,7 +3,7 @@
 
 ## The data
 
-This week we have as dataset the Human Development Index, an alternative to GNP to compare countries by human capabilities . Let's have a look.
+This week we have as dataset the Human Development Index, an alternative to GNP to compare countries by human capabilities. Let's have a look.
 
 ```{r,message=FALSE}
 setwd("C:/Users/Jonas/Documents/GitHub/IODS-project/data/")

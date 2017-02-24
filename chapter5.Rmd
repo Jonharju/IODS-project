@@ -20,7 +20,9 @@ summary(human)
 
 
 ```{r,message=FALSE}
-library(GGally); library(dplyr); library(corrplot)
+library(GGally) 
+library(dplyr) 
+library(corrplot)
 ggpairs(human)
 ```
 
@@ -31,7 +33,7 @@ Interestingly the most positively correlated seem to be educational expectations
 
 Let's perform Principal Component Analysis(PCA) on the unscaled data.
 
-```{r,message=FALSE}
+```{r,message=FALSE, warning=FALSE}
 pca_human <- prcomp(human)
 pca_human
 summary(pca_human)
@@ -52,4 +54,37 @@ This looks quite different compared to the previous one. Because PCA assumes tha
 
 The two components explain together around 64% of the variance in dataset. There seems to a negative correlation between maternal deaths and young births, as earlier suspected. There also seems to be a postive correlation between educational expecatations and the ratio of second level education. Not surprising at all. There also seems to be a correlation between GNI and life expectancy, which also seems logical. There would also seem to be some indication on that there is a  correlation between ratio of women to men working and women present in parliament, but it is not as clear as the previous.
 
+##MCA
 
+The next set is part of R's own dataset, about how people enjoy their tea. Let's have a look.
+
+```{r,message=FALSE}
+library(FactoMineR)
+library(tidyr)
+library(ggplot2)
+data(tea)
+dim(tea)
+str(tea)
+```
+
+The dataset consists of 300 observations of 36 variables. They are Factor variables with levels like black, earl gray or green, or truth values like sugar or no.sugar. Then there is the exception of age in integer form.
+
+```{r,message=FALSE, warning=FALSE}
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+tea_time <-
+   dplyr::select(tea, one_of(keep_columns))
+summary(tea_time)
+str(tea_time)
+
+```
+
+I'm going to focus on these variables, i.e. what kind of tea, if they add some milk or lemon, if they add sugar, is the tea in bag or unpackaged, where they buy it and if they drink it at lunch. 
+
+```{r,message=FALSE}
+mca <- MCA(tea_time, graph = FALSE)
+summary(mca)
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+The two dimensions explain almost 30% of the variance. This is quite low and can be seen in the fact that most of our variables correlation lies around -0.5 and 0.5.
+Some correlations are still visible, like purchasing unpackaged tea from a tea shop and buying tea bags from a chain store, plus then their combinations correlated with each other. This is quite understandable and expectable.
